@@ -1,0 +1,15 @@
+# Validate your file here: https://bitbucket-pipelines.atlassian.io/validator
+
+options:
+  docker: true
+
+pipelines:
+  default:
+    - step:
+        name: Docker Publish - DEV
+        image: atlassian/default-image:2
+        caches:
+          - docker
+        script:
+          - docker build . -t default-image
+          - ./scripts/publish -k "$GCLOUD_DEV_KEYFILE" -p "arquiveidev" -i "default-image"

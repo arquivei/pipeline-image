@@ -1,0 +1,67 @@
+#!/bin/bash
+
+export PATH="$PATH:./scripts/"
+
+function exit_on_error() {
+  EXIT_CODE=$?
+  if [ "$EXIT_CODE" -ne 0 ]; then
+    exit "$EXIT_CODE"
+  fi
+}
+
+CREATE_TAG="true"
+while getopts ":k:i:p:t" OPT; do
+  case "$OPT" in
+  "k")
+    export GCLOUD_KEYFILE="$OPTARG"
+    ;;
+  "i")
+    export IMAGE="$OPTARG"
+    ;;
+  "p")
+    export GCLOUD_PROJECT="$OPTARG"
+    ;;
+  "t")
+    export CREATE_TAG="$OPTARG"
+    ;;
+  *)
+    echo "Opção ${OPT} inválida."
+    ;;
+  esac
+done
+
+echo "Projeto: $GCLOUD_PROJECT"
+echo "Imagem: $IMAGE"
+echo "Criar tag: $CREATE_TAG"
+[[ -n $GCLOUD_KEYFILE ]] && echo "Keyfile: Existe" || echo echo "Keyfile: Não existe"
+
+if [ -z "$GCLOUD_PROJECT" ] || [ -z "$GCLOUD_KEYFILE" ] || [ -z "$IMAGE" ]; then
+  echo "ERRO: As opções -e -i e -p são obrigatórias."
+  exit 1
+fi
+
+docker-login
+exit_on_error
+
+REPOSITORY=gcr.io/${GCLOUD_PROJECT}/${IMAGE}
+VERSION=$(get-next-version)
+exit_on_error
+
+if [ "$CREATE_TAG" == "true" ]; then
+  echo "Create tag ${VERSION}"
+  git tag "${VERSION}"
+  git push origin "${BUMPED}"
+fi
+
+if [ -f ./image.docker ]; then
+  docker load --input ./image.docker
+fi
+
+docker tag "$IMAGE":latest "$REPOSITORY":latest
+docker tag "$IMAGE":latest "$REPOSITORY":"$VERSION"
+docker push "$REPOSITORY":latest
+docker push "$REPOSITORY":"$VERSION"
+
+echo "${REPOSITORY}:${VERSION}"
+
+exit 0

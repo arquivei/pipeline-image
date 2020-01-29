@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ -z "$GCLOUD_PROJECT" ] || [ -z "$GCLOUD_KEYFILE" ]; then
+  echo "ERRO: As envs GCLOUD_PROJECT e GCLOUD_KEYFILE são obrigatórias."
+  exit 1
+fi
+
+echo "$GCLOUD_KEYFILE" | base64 -d > ./gcloud-api-key.json
+gcloud auth activate-service-account --key-file ./gcloud-api-key.json
+gcloud config set project "$GCLOUD_PROJECT"
+docker login -u _json_key -p "$(cat ./gcloud-api-key.json)" https://gcr.io
+
+exit 0
