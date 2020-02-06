@@ -13,7 +13,7 @@ TAG=$(
 if [[ -z "${TAG}" ]]; then
   echo "${PREFIX}.0"
 else
-   echo "$TAG" | cut -d. -f2 | xargs expr 1 +
+  echo "$TAG" | cut -d. -f2 | xargs expr 1 +
 fi
 
 exit 0
