@@ -1,19 +1,19 @@
 #!/bin/bash
 
-PREFIX=$(date +%y%m)
+prefix=$(date +%y%m)
 
-TAG=$(
+tag=$(
   git for-each-ref \
     --sort='-version:refname' \
     --count=1 \
     --format='%(refname:short)' \
-    "refs/tags/${PREFIX}.*"
+    "refs/tags/${prefix}.*"
 )
 
-if [[ -z "${TAG}" ]]; then
-  echo "${PREFIX}.0"
+if [[ -z "${tag}" ]]; then
+  echo "${prefix}.0"
 else
-  echo "$TAG" | cut -d. -f2 | xargs expr 1 +
+  echo "$tag" | cut -d. -f2 | xargs expr 1 +
 fi
 
 exit 0

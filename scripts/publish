@@ -1,29 +1,30 @@
 #!/bin/bash
 
 function exit_on_error() {
-  EXIT_CODE=$?
-  if [ "$EXIT_CODE" -ne 0 ]; then
-    exit "$EXIT_CODE"
+  local exit_code=$?
+  if [ "$exit_code" -ne 0 ]; then
+    exit "$exit_code"
   fi
 }
 
-declare -a TAGS
+declare -a tags
+create_version="false"
 while getopts ":k:i:p:vt:" OPT; do
   case "$OPT" in
   k)
-    export GCLOUD_KEYFILE="$OPTARG"
+    keyfile="$OPTARG"
     ;;
   i)
-    export IMAGE="$OPTARG"
+    image="$OPTARG"
     ;;
   p)
-    export GCLOUD_PROJECT="$OPTARG"
+    project="$OPTARG"
     ;;
   v)
-    export CREATE_TAG="true"
+    create_version="true"
     ;;
   t)
-    export TAGS+=("$OPTARG")
+    tags+=("$OPTARG")
     ;;
   \?)
     echo "Opção ${OPT} inválida."
@@ -31,31 +32,31 @@ while getopts ":k:i:p:vt:" OPT; do
   esac
 done
 
-echo "Projeto: $GCLOUD_PROJECT"
-echo "Imagem: $IMAGE"
-echo "Criar tag: $CREATE_TAG"
-[[ -n $GCLOUD_KEYFILE ]] && echo "Keyfile: Existe" || echo "Keyfile: Não existe"
+echo "Projeto: $project"
+echo "Imagem: $image"
+echo "Criar versão: $create_version"
+[[ -n $keyfile ]] && echo "Keyfile: Existe" || echo "Keyfile: Não existe"
 
-if [ -z "$GCLOUD_PROJECT" ] || [ -z "$GCLOUD_KEYFILE" ] || [ -z "$IMAGE" ]; then
+if [ -z "$project" ] || [ -z "$keyfile" ] || [ -z "$image" ]; then
   echo "ERRO: As opções -k -p e -i são obrigatórias."
   exit 1
 fi
 
-docker-login
+docker-login "$project" "$keyfile"
 exit_on_error
 
-REPOSITORY=gcr.io/${GCLOUD_PROJECT}/${IMAGE}
-VERSION=$(get-next-version)
+repository="gcr.io/$project/$image"
+version=$(get-next-version)
 exit_on_error
 
-if [ "$CREATE_TAG" == "true" ]; then
-  echo "Create tag ${VERSION}"
-  git tag "${VERSION}"
-  git push origin "${BUMPED}"
-  TAGS+=("$VERSION")
+if [ "$create_version" == "true" ]; then
+  echo "Create git-tag ${version}"
+  git tag "$version"
+  git push origin "$version"
+  TAGS+=("$version")
 fi
 
-if [ "${#TAGS[@]}" -eq 0 ]; then
+if [ "${#tags[@]}" -eq 0 ]; then
   echo "ERRO: Especifique uma tag com -t 'tag' ou então utilize -v para incrementar a versão no git"
 fi
 
@@ -63,11 +64,11 @@ if [ -f ./image.docker ]; then
   docker load --input ./image.docker
 fi
 
-for tag in "${TAGS[@]}"; do
-  docker tag "$IMAGE" "$REPOSITORY":"$tag"
-  docker push "$REPOSITORY":"$tag"
+for tag in "${tags[@]}"; do
+  docker tag "$image" "$repository":"$tag"
+  docker push "$repository":"$tag"
+  echo "$repository:$tag"
 done
 
-echo "${REPOSITORY}:{$(printf '%s\n' "$(IFS=,; printf '%s' "${TAGS[*]}")")}"
 
 exit 0
