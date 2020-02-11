@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# This script bumps the latest tag from a git repository that matches the given
+# prefix. If no prefix is given, it will automatically generate one based on
+# the current date.
+
+# Usage:
+# $ ./create-version
+
+# exit on errors
+set -e
+
+# Sets unofficial Bash Strict Mode
+# shellcheck disable=SC2128
+sourced=false && [ "$0" = "$BASH_SOURCE" ] || sourced=true
+if ! $sourced; then
+    # Enable strict mode
+    set -euo pipefail
+    IFS=$'\n\t'
+fi
+
+
+# Version prefix, defaults to current date using <YEAR><MONTH>
+major=$(date +%-y%m)
+
+# Get last tag that maches prefix from git
+tag=$(git for-each-ref \
+    --sort='-version:refname' \
+    --count=1 \
+    --format='%(refname:short)' \
+    "refs/tags/${major}.*"
+)
+
+if [[ $(git rev-parse -q --verify HEAD) == $(git rev-parse -q --verify "${tag}") ]]; then
+    echo "$tag"
+    exit 0
+fi
+
+# Bump the last tag or creates a new tag ending in '.0' if no match was found
+if [[ -z "${tag}" ]]; then
+    bumped="${major}.0"
+else
+    minor=$(echo "$tag" | cut -d. -f2 | xargs expr 1 +)
+    bumped="$major.$minor"
+fi
+
+# Apply the new tag to Git
+git tag "${bumped}" > /dev/null
+git push origin "${bumped}" > /dev/null
+
+echo "$bumped"

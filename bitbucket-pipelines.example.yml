@@ -1,0 +1,55 @@
+options:
+  docker: true
+
+definitions:
+  steps:
+    - step: &build
+        name: Docker Build
+        image: gradle:6.0-jdk8
+        caches:
+          - gradle
+        artifacts:
+          - image.docker
+        script:
+          - docker build -t <image> .
+          - docker save --output image.docker <image>
+    - step: &publish
+        name: Publish Image
+        image: arquivei/pipeline:2
+        script:
+          - |
+            case "$BITBUCKET_DEPLOYMENT_ENVIRONMENT" in
+              *production)
+                version=$(create-version)
+                publish -k "$GCLOUD_DEV_KEYFILE" -p "$GCLOUD_DEV_PROJECT" -i "<image>" -t "latest" -t "$BITBUCKET_BUILD_NUMBER" -t "$version"
+                publish -k "$GCLOUD_PROD_KEYFILE" -p "$GCLOUD_PROD_PROJECT" -i "<image>" -t "$BITBUCKET_BUILD_NUMBER" -t "$version"
+                ;;
+              *staging)
+                publish -k "$GCLOUD_DEV_KEYFILE" -p "$GCLOUD_DEV_PROJECT" -i "<image>" -t "$BITBUCKET_BUILD_NUMBER" -t "${BITBUCKET_BRANCH//\//-}"
+                ;;
+              *test)
+                publish -k "$GCLOUD_DEV_KEYFILE" -p "$GCLOUD_DEV_PROJECT" -i "<image>" -t "$BITBUCKET_BUILD_NUMBER"
+                ;;
+            esac
+
+pipelines:
+  default:
+    - step: *build
+    - step:
+        <<: *publish
+        trigger: manual
+        deployment: test
+
+  branches:
+    master:
+      - step: *build
+      - step:
+          <<: *publish
+          deployment: production
+
+  custom:
+    app/fullstack:
+      - step: *build
+      - step:
+          <<: *publish
+          deployment: staging

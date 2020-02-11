@@ -8,8 +8,7 @@ function exit_on_error() {
 }
 
 declare -a tags
-create_version="false"
-while getopts ":k:i:p:vt:" OPT; do
+while getopts ":k:i:p:t:" OPT; do
   case "$OPT" in
   k)
     keyfile="$OPTARG"
@@ -19,9 +18,6 @@ while getopts ":k:i:p:vt:" OPT; do
     ;;
   p)
     project="$OPTARG"
-    ;;
-  v)
-    create_version="true"
     ;;
   t)
     tags+=("$OPTARG")
@@ -34,7 +30,6 @@ done
 
 echo "Projeto: $project"
 echo "Imagem: $image"
-echo "Criar versão: $create_version"
 [[ -n $keyfile ]] && echo "Keyfile: Existe" || echo "Keyfile: Não existe"
 
 if [ -z "$project" ] || [ -z "$keyfile" ] || [ -z "$image" ]; then
@@ -46,18 +41,10 @@ docker-login "$project" "$keyfile"
 exit_on_error
 
 repository="gcr.io/$project/$image"
-version=$(get-next-version)
 exit_on_error
 
-if [ "$create_version" == "true" ]; then
-  echo "Create git-tag ${version}"
-  git tag "$version"
-  git push origin "$version"
-  TAGS+=("$version")
-fi
-
 if [ "${#tags[@]}" -eq 0 ]; then
-  echo "ERRO: Especifique uma tag com -t 'tag' ou então utilize -v para incrementar a versão no git"
+  echo "ERRO: Especifique pelo menos uma tag com -t 'tag'"
 fi
 
 if [ -f ./image.docker ]; then
@@ -67,6 +54,10 @@ fi
 for tag in "${tags[@]}"; do
   docker tag "$image" "$repository":"$tag"
   docker push "$repository":"$tag"
+done
+
+echo "Imagens publicadas"
+for tag in "${tags[@]}"; do
   echo "$repository:$tag"
 done
 
