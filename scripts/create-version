@@ -19,11 +19,16 @@ if ! $sourced; then
     IFS=$'\n\t'
 fi
 
+current=$(git tag --points-at=HEAD)
+if [[ -n "$current" ]]; then
+  echo "$current"
+  exit 0
+fi
 
 # Version prefix, defaults to current date using <YEAR><MONTH>
 major=$(date +%-y%m)
 
-# Get last tag that maches prefix from git
+# Get last tag that matches prefix from git
 tag=$(git for-each-ref \
     --sort='-version:refname' \
     --count=1 \
