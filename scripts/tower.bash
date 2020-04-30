@@ -26,4 +26,4 @@ echo $VERSION
 # Let's run a tower-cli job
 awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
 -f human workflow_job_templates launch ${TEMPLATE_ID} \
---extra_vars='{"deploy_version": "'"${VERSION}"'", "commit_message": "'"${COMMIT_MESSAGE}"'"}'
+--extra_vars='{"deploy_version": "'"${VERSION}"'", "deploy_name": "'"${SERVICE_NAME}"'", "commit_message": "'"${COMMIT_MESSAGE}"'"}'
