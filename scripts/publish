@@ -7,14 +7,14 @@ function exit_on_error() {
   fi
 }
 
-declare -a tags
+declare -a tags images
 while getopts ":k:i:p:t:" OPT; do
   case "$OPT" in
   k)
     keyfile="$OPTARG"
     ;;
   i)
-    image="$OPTARG"
+    images+=("$OPTARG")
     ;;
   p)
     project="$OPTARG"
@@ -37,29 +37,50 @@ if [ -z "$project" ] || [ -z "$keyfile" ] || [ -z "$image" ]; then
   exit 1
 fi
 
+if [ "${#tags[@]}" -eq 0 ]; then
+  echo "ERRO: Especifique pelo menos uma tag com -t 'tag'"
+  exit 1
+fi
+
+if [ "${#images[@]}" -eq 0 ]; then
+  echo "ERRO: Especifique pelo menos uma imagem com -i 'image'"
+  exit 1
+fi
+
 docker-login "$project" "$keyfile"
 exit_on_error
 
-repository="gcr.io/$project/$image"
-exit_on_error
-
-if [ "${#tags[@]}" -eq 0 ]; then
-  echo "ERRO: Especifique pelo menos uma tag com -t 'tag'"
-fi
-
 if [ -f ./image.docker ]; then
-  docker load --input ./image.docker
+  docker load --input ./image.docker 1> /dev/null
 fi
 
-for tag in "${tags[@]}"; do
-  docker tag "$image" "$repository":"$tag"
-  docker push "$repository":"$tag"
+for image in "${images[@]}"; do
+  if (! docker image inspect "$image" &> /dev/null); then
+    if [ -f "$image.docker" ]; then
+      docker load --input "$image.docker" 1> /dev/null
+    else
+      echo "ERROR: neither image={${image}} nor ${image}.docker file exists"
+      exit 1
+    fi
+  fi
+done
+
+declare -a published
+for image in "${images[@]}"; do
+  repository="gcr.io/$project/$image"
+
+  for tag in "${tags[@]}"; do
+    to_publish="$repository:$tag"
+
+    docker tag "$image" "$to_publish"
+    docker push "$to_publish"
+
+    published+=("$to_publish")
+  done
 done
 
 echo "Imagens publicadas"
-for tag in "${tags[@]}"; do
-  echo "$repository:$tag"
+for image in "${published[@]}"; do
+  echo "$image"
 done
 
-
-exit 0
