@@ -32,7 +32,7 @@ echo "Projeto: $project"
 echo "Imagem: $image"
 [[ -n $keyfile ]] && echo "Keyfile: Existe" || echo "Keyfile: Não existe"
 
-if [ -z "$project" ] || [ -z "$keyfile" ] || [ -z "$image" ]; then
+if [ -z "$project" ] || [ -z "$keyfile" ]; then
   echo "ERRO: As opções -k -p e -i são obrigatórias."
   exit 1
 fi
