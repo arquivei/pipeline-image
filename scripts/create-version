@@ -19,6 +19,18 @@ if ! $sourced; then
     IFS=$'\n\t'
 fi
 
+DRY_RUN="false"
+while getopts "d" OPT; do
+  case "$OPT" in
+  d)
+    DRY_RUN="true"
+    ;;
+  \?)
+    echo "Opção ${OPT} inválida"
+    ;;
+  esac
+done
+
 current=$(git tag --points-at=HEAD)
 if [[ -n "$current" ]]; then
   echo "$current"
@@ -50,7 +62,9 @@ else
 fi
 
 # Apply the new tag to Git
-git tag "${bumped}" > /dev/null
-git push origin "${bumped}" > /dev/null
+if [[ $DRY_RUN == "false" ]]; then
+  git tag "${bumped}" > /dev/null
+  git push origin "${bumped}" > /dev/null
+fi
 
 echo "$bumped"
