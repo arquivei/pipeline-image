@@ -3,6 +3,11 @@ options:
 
 definitions:
   steps:
+    - step: &check-env-vars
+        name: Publish Image
+        image: arquivei/pipeline:2
+        script:
+          - check-env-vars "./app" ."env.dist"
     - step: &build
         name: Docker Build
         image: gradle:6.0-jdk8
@@ -34,6 +39,7 @@ definitions:
 
 pipelines:
   default:
+    - step: *check-env-vars
     - step: *build
     - step:
         <<: *publish
@@ -42,6 +48,7 @@ pipelines:
 
   branches:
     master:
+      - step: *check-env-vars
       - step: *build
       - step:
           <<: *publish

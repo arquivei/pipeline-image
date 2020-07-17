@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# This scripts finds all usages of the function env in php files
+# and validates if all envs are declated in 
+
+# Usage:
+# $ ./check-env-vars TARGET_FOLDER ENV_VARS_FILE
+
+if [ $# -lt 2 ]; then
+    echo "Usage" 
+    echo "./check-env-vars TARGET_FOLDER ENV_VARS_FILE"
+fi
+
+TARGET_FOLDER="$1"
+VAR_FILE="$2"
+
+DATA_FOLDER=$(mktemp -d)
+
+USED_ENV_VARS_FILE="${DATA_FOLDER}/app_used_envs.txt"
+DECLARED_ENV_VARS_FILE="${DATA_FOLDER}/declared_env_vars.txt"
+UNDECLARED_ENV_VARS_FILE="${DATA_FOLDER}/undeclared_env_vars.txt"
+
+#Encontra todos os usos da função env() nos arquivos .php do diretório target
+find $TARGET_FOLDER/ -name '*.php' | xargs -r grep -o -h "env(.*[^)|^\,]" | sed -e "s/ //g;s/\"/'/g" | awk '{
+    is_variable = 0;
+    for (idx=1; idx <= NF; idx++) {
+        field_value = $idx
+        if (is_variable == 1) {
+            env_vars[field_value] = "ok";
+            is_variable = 0;
+            continue;
+        }
+        field_length = length(field_value);
+        field_last_four_char = substr(field_value, field_length - 3);
+        if (field_last_four_char == "env(") {
+            is_variable = 1;
+        }
+    }
+}
+END {
+    for (key in env_vars) {
+        print key
+    }
+}' FS="'" | sort > "${USED_ENV_VARS_FILE}"
+
+#Lista todas as variáveis declaradas no arquivo de variáveis de ambiente
+cat $VAR_FILE | sed '/^[[:space:]]*$/d;/[[:space:]]*\#/d' | cut -d'=' -f1 | sort > "${DECLARED_ENV_VARS_FILE}"
+
+#Compara os usos da função com as variáveis declaradas
+comm -23 "${USED_ENV_VARS_FILE}" "${DECLARED_ENV_VARS_FILE}" > "${UNDECLARED_ENV_VARS_FILE}"
+
+#Testa se existe alguma variável utilizada que não foi declarada
+if [ $(cat $UNDECLARED_ENV_VARS_FILE | wc -l) -gt 0 ]; then 
+    echo -e "Variaveis não declaradas:\n" 
+    cat "${UNDECLARED_ENV_VARS_FILE}"
+    exit 1 
+fi;
+
+echo "Todas variaveis foram encontradas no .env.dist"
+exit 0
