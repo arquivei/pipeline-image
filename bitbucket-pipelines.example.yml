@@ -4,7 +4,7 @@ options:
 definitions:
   steps:
     - step: &check-env-vars
-        name: Publish Image
+        name: Verify env var definition
         image: arquivei/pipeline:2
         script:
           - check-env-vars "./app" ."env.dist"
