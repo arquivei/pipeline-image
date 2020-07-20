@@ -5,7 +5,7 @@ definitions:
   steps:
     - step: &check-env-vars
         name: Verify env var definition
-        image: arquivei/pipeline:2
+        image: arquivei/pipeline:v2
         script:
           - check-env-vars "./app" ."env.dist"
     - step: &build
@@ -20,7 +20,7 @@ definitions:
           - docker save --output image.docker <image>
     - step: &publish
         name: Publish Image
-        image: arquivei/pipeline:2
+        image: arquivei/pipeline:v2
         script:
           - |
             case "$BITBUCKET_DEPLOYMENT_ENVIRONMENT" in
