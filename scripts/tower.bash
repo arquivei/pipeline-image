@@ -23,7 +23,12 @@ echo $hostval
 echo $userval
 echo $VERSION
 
-# Let's run a tower-cli job
-awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
--f human workflow_job_templates launch ${TEMPLATE_ID} \
---extra_vars='{"deploy_version": "'"${VERSION}"'", "deploy_name": "'"${SERVICE_NAME}"'", "commit_message": "'"${COMMIT_MESSAGE}"'"}'
+if [[ -z ${SPECIFIC_SERVICE_TAG} ]]; then
+  awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
+  -f human workflow_job_templates launch ${TEMPLATE_ID} \
+  --extra_vars='{"deploy_version": "'"${VERSION}"'", "deploy_name": "'"${SERVICE_NAME}"'", "commit_message": "'"${COMMIT_MESSAGE}"'"}'
+else
+  awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
+  -f human workflow_job_templates launch ${TEMPLATE_ID} \
+  --extra_vars='{"deploy_version": "'"${VERSION}"'", "deploy_name": "'"${SERVICE_NAME}"'", "commit_message": "'"${COMMIT_MESSAGE}"'", "specific_service_tag": "'"${SPECIFIC_SERVICE_TAG}"'"}'
+fi
