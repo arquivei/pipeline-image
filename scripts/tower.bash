@@ -24,7 +24,6 @@ echo $userval
 echo $VERSION
 
 if [[ -z ${SPECIFIC_SERVICE_TAG} ]]; then
-  echo "SPECIFIC_SERVICE_TAG not set, using NEW template format WITHOUT specific tag"
   awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
   -f human workflow_job_templates launch ${TEMPLATE_ID} \
   --extra_vars='{"deploy_version": "'"${VERSION}"'", "deploy_name": "'"${SERVICE_NAME}"'", "commit_message": "'"${COMMIT_MESSAGE}"'"}'
