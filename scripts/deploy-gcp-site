@@ -1,0 +1,53 @@
+#!/bin/bash
+
+: <<'END_OF_DOCS'
+
+Authenticate an account with a key file in order to deploy `source_dir` to a
+publicly accessible bucket. If the bucket does not exist, create it first with
+"us-central1" as its location and with uniform access.
+
+References:
+
+- https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account
+- https://cloud.google.com/storage/docs/gsutil/commands/mb
+- https://cloud.google.com/storage/docs/gsutil/commands/iam
+- https://cloud.google.com/storage/docs/gsutil/commands/rm
+- https://cloud.google.com/storage/docs/gsutil/commands/rsync
+
+END_OF_DOCS
+
+set -euo pipefail
+
+while getopts ":k:p:b:s:" opt; do
+  case $opt in
+    k)
+        key_file="$OPTARG"
+        ;;
+    p)
+        project="$OPTARG"
+        ;;
+    b)
+        bucket="$OPTARG"
+        ;;
+    s)
+        source_dir="$OPTARG"
+        ;;
+    \?)
+        echo "Invalid option -$OPTARG" >&2
+        exit 1
+        ;;
+    :)
+        echo "Missing option argument for -$OPTARG" >&2
+        exit 1
+        ;;
+  esac
+done
+
+gcloud auth activate-service-account --key-file "$key_file"
+
+if ! gsutil -q stat gs://"$bucket"/*; then
+    gsutil mb -p "$project" -l us-central1 -b on gs://"$bucket"
+    gsutil iam ch allUsers:objectViewer gs://"$bucket"
+fi
+
+gsutil -m -h "Cache-Control:no-cache, max-age=0, no-transform" rsync -R "$source_dir" gs://"$bucket"
