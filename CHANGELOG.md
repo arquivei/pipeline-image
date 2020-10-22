@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2020-10-22
+
+### Fixed
+
+- exec permission for `deploy-gcp-site`
+
 ## [2.2.0] - 2020-10-19
 
 ### Added
@@ -29,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `version` script to create CalVer tags based on existing repository tags
 - `tower.bash` script to trigger a job to start automatic deployment with AWX
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/2.2.1...HEAD
+[2.2.1]: https://github.com/arquivei/pipeline-image/compare/2.2.1...2.2.0
 [2.2.0]: https://github.com/arquivei/pipeline-image/compare/2.2.0...2.1.0
 [2.1.0]: https://github.com/arquivei/pipeline-image/compare/2.1.0...2.0.0
 [2.0.0]: https://github.com/arquivei/pipeline-image/releases/tag/2.0.0
