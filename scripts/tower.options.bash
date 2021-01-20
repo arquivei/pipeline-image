@@ -47,7 +47,6 @@ function dataflow_deploy(){
   echo "RUNNING_ENV: $RUNNING_ENV"
   echo "SRCPROJECT: $SRCPROJECT"
 
-  '{"gcp_project": "'"${GCP_PROJECT}"'", "project_name": "'"${PROJECT_NAME}"'",  "project_simple_version": "'"${PROJECT_SIMPLE_VERSION}"'",  "project_version": "'"${PROJECT_VERSION}"'",  "running_env": "'"${RUNNING_ENV}"'",  "srcproject": "'"${SRCPROJECT}"'"}'
   awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
     -f human workflow_job_templates launch ${TEMPLATE_ID} \
     --extra_vars='{"gcp_project": "'"${GCP_PROJECT}"'", "project_name": "'"${PROJECT_NAME}"'",  "project_simple_version": "'"${PROJECT_SIMPLE_VERSION}"'",  "project_version": "'"${PROJECT_VERSION}"'",  "running_env": "'"${RUNNING_ENV}"'",  "srcproject": "'"${SRCPROJECT}"'"}'
