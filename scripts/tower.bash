@@ -68,6 +68,7 @@ case $TOWER_OPTION in
 
   *)
     echo "Option not valid, exiting"
+    exit 1
     ;;
 esac
 
