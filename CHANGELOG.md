@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2021-03-10
+
+### Added
+
+- `update-api-doc` script to push swagger.json documentation
+to a GCS bucket
+
 ## [2.2.1] - 2020-10-22
 
 ### Fixed

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+function require_variable {
+	for var in $@; do
+		echo "Checking if varible is set: ${var}=$(eval echo \$${var})"
+		if [ -z "$(eval echo \$${var})" ]; then
+			echo "missing or empty '${var}' variable"
+			exit 1
+		fi
+	done
+}
+
+require_variable \
+  KEYFILE \
+  PROJECT \
+  FILE \
+  GROUP \
+  API_NAME \
+  VERSION
+
+BUCKET=${BUCKET:-"arquivei-internal-apis-docs"}
+
+
+echo "${KEYFILE}" | base64 -d | gcloud auth activate-service-account --project "${PROJECT}" --quiet --key-file=-
+
+sed -i -e "s/{{version}}/${VERSION}/g" "${FILE}"
+gsutil cp "${FILE}" "gs://${BUCKET}/${GROUP}/${API_NAME}.json"
