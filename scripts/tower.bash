@@ -82,6 +82,10 @@ case $TOWER_OPTION in
     dataflow_deploy
     ;;
 
+  packer_build_image)
+    packer_build
+    ;;
+
   *)
     echo "Option not valid, exiting"
     exit 1
