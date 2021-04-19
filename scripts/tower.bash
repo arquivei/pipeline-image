@@ -55,9 +55,25 @@ function dataflow_deploy(){
     --extra_vars='{"gcp_project": "'"${GCP_PROJECT}"'", "project_name": "'"${PROJECT_NAME}"'",  "project_simple_version": "'"${PROJECT_SIMPLE_VERSION}"'",  "project_version": "'"${PROJECT_VERSION}"'",  "running_env": "'"${RUNNING_ENV}"'",  "srcproject": "'"${SRCPROJECT}"'"}'
 }
 
+function packer_build() {
+  echo "current configuration settings:"
+  echo $hostval
+  echo $userval
+  echo $VERSION
+  echo
+  echo "SRCPROJECT: $SRCPROJECT"
+  echo "GIT_BRANCH: $GIT_BRANCH"
+  echo "PACKER_FOLDER: $PACKER_FOLDER"
+  echo "PACKER_VAR_FILE: $PACKER_VAR_FILE"
+
+  awx --conf.host https://${hostval} --conf.username ${userval} --conf.password ${passwordval} \
+    -f human job_templates launch ${TEMPLATE_ID} \
+    --extra_vars='{"srcproject": "'"${SRCPROJECT}"'", "git_branch": "'"${GIT_BRANCH}"'",  "packer_folder": "'"${PACKER_FOLDER}"'",  "packer_var_file": "'"${PACKER_VAR_FILE}"'"}'
+}
+
 
 case $TOWER_OPTION in
-  
+
   kubernetes_deploy)
     k8s_deploy
     ;;
